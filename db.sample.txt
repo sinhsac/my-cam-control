@@ -1,0 +1,71 @@
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize database helper
+    db = DbHelper()
+
+    try:
+        # Example 1: Select all cameras
+        print("=== Select All Cameras ===")
+        cameras = db.select_all("xcam_cameras")
+        for camera in cameras:
+            print(camera)
+
+        # Example 2: Select by ID
+        print("\n=== Select Camera by ID ===")
+        camera = db.select_by_id("xcam_cameras", 1)
+        if camera:
+            print(camera)
+
+        # Example 3: Insert single record
+        print("\n=== Insert Single Record ===")
+        new_camera = {
+            "name": "Camera Test",
+            "ip": "192.168.1.100",
+            "status": "active"
+        }
+        # last_id = db.insert_one("xcam_cameras", new_camera)
+        # print(f"Inserted camera with ID: {last_id}")
+
+        # Example 4: Insert batch
+        print("\n=== Insert Batch Records ===")
+        cameras_batch = [
+            {"name": "Camera Batch 1", "ip": "192.168.1.101", "status": "active"},
+            {"name": "Camera Batch 2", "ip": "192.168.1.102", "status": "inactive"},
+            {"name": "Camera Batch 3", "ip": "192.168.1.103", "status": "active"}
+        ]
+        # affected = db.insert_batch("xcam_cameras", cameras_batch)
+        # print(f"Inserted {affected} cameras")
+
+        # Example 5: Update by ID
+        print("\n=== Update by ID ===")
+        update_data = {"status": "maintenance", "ip": "192.168.1.200"}
+        # affected = db.update_by_id("xcam_cameras", 1, update_data)
+        # print(f"Updated {affected} records")
+
+        # Example 6: Update with conditions
+        print("\n=== Update with Conditions ===")
+        # affected = db.update_with_conditions(
+        #     "xcam_cameras",
+        #     {"status": "offline"},
+        #     "ip LIKE %s",
+        #     ("192.168.1.%",)
+        # )
+        # print(f"Updated {affected} records")
+
+        # Example 7: Count records
+        print("\n=== Count Records ===")
+        total = db.count_records("xcam_cameras")
+        active = db.count_records("xcam_cameras", "status = %s", ("active",))
+        print(f"Total cameras: {total}, Active cameras: {active}")
+
+        # Example 8: Using context manager
+        print("\n=== Using Context Manager ===")
+        with DbHelper() as db_ctx:
+            cameras = db_ctx.select_all("xcam_cameras", "status = %s", ("active",))
+            print(f"Found {len(cameras)} active cameras")
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        db.close_connection()
