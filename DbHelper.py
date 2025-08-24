@@ -19,12 +19,25 @@ class ColNames:
     CREATED_AT = 'created_at'
     STATUS = 'status'
     ADDITIONS = 'additions'
+    USER = "username"
+    PASSWORD = "password"
+    CHANNEL = "channel"
 
 class ActionStatus:
     PENDING = 'pending'
     IN_PROGRESS = 'in_progress'
     DONE = 'done'
     FAILED = 'failed'
+
+class ActionType:
+    CHECK_CONFIG = 'check_config'
+    CAPTURE_IMAGE = 'capture_image'
+    CAPTURE_AND_STITCH = 'capture_and_stitch'
+    START_RECORDING = 'start_recording'
+
+
+class FieldNames:
+    MAC_ADDRESSES = 'mac_addresses'
 
 class DbHelper:
     """

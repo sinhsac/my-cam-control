@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 
 from CamHelper import get_cam_config, \
-    invalid_cam_config
-from DbHelper import DbHelper, TableNames, ColNames, ActionStatus
+    invalid_cam_config, get_url, test_rtsp_connection
+from DbHelper import DbHelper, TableNames, ColNames, ActionStatus, FieldNames, ActionType
 from SysConfig import SysConfig
 from common import logger, str2dict
 
@@ -66,23 +66,47 @@ def do_worker():
 
 
 def do_action(action, addition):
+    action_status = ActionStatus.DONE
     try:
         command = action[ColNames.COMMAND]
-        if command == 'capture_and_stitch' and ColNames.MAC_ADDRESS in addition:
-            mac_address = addition[ColNames.MAC_ADDRESS]
-            cam_info = db.select_all(table=TableNames.CAMERA,
-                                     conditions=f"{ColNames.MAC_ADDRESS} = '{mac_address}'",
-                                     limit=1)
-            if cam_info:
-                cam_info = cam_info[0]
+        if FieldNames.MAC_ADDRESSES in addition:
+            mac_addresses = addition[FieldNames.MAC_ADDRESSES]
+            joined_macs = "', '".join(mac_addresses)
+            final_string = "'" + joined_macs + "'"
+            cam_infos = db.select_all(table=TableNames.CAMERA,
+                                     conditions=f"{ColNames.MAC_ADDRESS} IN ({final_string})")
+        else:
+            logger.warning('no camera choose')
+            action_status = ActionStatus.FAILED
+            return
 
-            if cam_info:
-                ip_address = cam_info[ColNames.IP_ADDRESS]
-                logger.info(f"do command {command}, with cam IP {ip_address} here")
+        if not cam_infos:
+            logger.warning(f"not found cameras for macs: {final_string}")
+            action_status = ActionStatus.FAILED
+            return
+
+        logger.info(f"found {len(cam_infos)} cameras for macs: {final_string}")
+
+        for cam_info in cam_infos:
+            ip_address = cam_info[ColNames.IP_ADDRESS]
+            user = cam_info[ColNames.USER]
+            password = cam_info[ColNames.PASSWORD]
+            logger.info(f"do command {command}, with cam IP {ip_address} here")
+            if command == ActionType.CHECK_CONFIG:
+                rtsp_url = get_url(ip_address, user, password)
+                if test_rtsp_connection(rtsp_url):
+                    action_status = ActionStatus.DONE
+                    logger.info(f"this cam with url {rtsp_url} is working")
+
+
     finally:
+        logger.info(f"finally update action {action[ColNames.ID]} to {action_status}")
         db.update_by_id(table=TableNames.ACTION,
                         id_value=action[ColNames.ID],
-                        data={ColNames.STATUS: ActionStatus.DONE})
+                        data={
+                            ColNames.STATUS: action_status,
+                            ColNames.UPDATED_AT: datetime.now()
+                        })
 
 try:
     while running:
