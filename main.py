@@ -76,6 +76,26 @@ def do_worker():
         time.sleep(10)
     return True
 
+
+def do_action(action, addition):
+    try:
+        command = action[ColumnNames.COMMAND]
+        if command == 'capture_and_stitch' and ColumnNames.MAC_ADDRESS in addition:
+            mac_address = addition[ColumnNames.MAC_ADDRESS]
+            cam_info = db.select_all(table=TableNames.CAMERA,
+                                     conditions=f"{ColumnNames.MAC_ADDRESS} = '{mac_address}'",
+                                     limit=1)
+            if cam_info:
+                cam_info = cam_info[0]
+
+            if cam_info:
+                ip_address = cam_info[ColumnNames.IP_ADDRESS]
+                logger.info(f"do command {command}, with cam IP {ip_address} here")
+    finally:
+        db.update_by_id(table=TableNames.ACTION,
+                        id_value=action['id'],
+                        data={ColumnNames.STATUS: ActionStatus.DONE})
+
 try:
     while running:
         if not do_worker():
