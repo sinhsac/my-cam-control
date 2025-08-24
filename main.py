@@ -4,7 +4,7 @@ from datetime import datetime
 
 from CamHelper import get_cam_config, \
     invalid_cam_config
-from DbHelper import DbHelper
+from DbHelper import DbHelper, TableNames, ColumnNames, ActionStatus
 from SysConfig import SysConfig
 from common import logger, str2dict
 
@@ -23,50 +23,38 @@ def do_worker():
             return False
 
         if not is_cached:
-            logger.info('force delete cam')
+            logger.info('force update all cam')
             data_list = []
             for cam_item in cam_config['cameras']:
                 data_list.append({
-                    'ip_address': cam_item['ip'],
-                    'ip_type': cam_item['type'],
-                    'mac_address': cam_item['mac'],
-                    'updated_at': datetime.now()
+                    ColumnNames.IP_ADDRESS: cam_item['ip'],
+                    ColumnNames.IP_TYPE: cam_item['type'],
+                    ColumnNames.MAC_ADDRESS: cam_item['mac'],
+                    ColumnNames.UPDATED_AT: datetime.now()
                 })
             db.insert_or_update_batch_precise(
-                table="xcam_cameras",
+                table=TableNames.CAMERA,
                 data_list=data_list,
-                unique_columns=["mac_address"],  # Check for duplicate by email
-                update_columns=["ip_address", "updated_at"]  # Only update these columns
+                unique_columns=[ColumnNames.MAC_ADDRESS],
+                update_columns=[ColumnNames.IP_ADDRESS, ColumnNames.UPDATED_AT]
             )
 
-        action = db.select_first_order_by(table="xcam_actions",
-                                          conditions="status = 'pending'",
-                                          col_name='created_at',
+        action = db.select_first_order_by(table=TableNames.ACTION,
+                                          conditions=f"{ColumnNames.STATUS} = '{ActionStatus.PENDING}'",
+                                          col_name=ColumnNames.CREATED_AT,
                                           sort_type='desc')
         if not action:
             time.sleep(2)
             return True
 
-        db.update_by_id(table="xcam_actions",
-                        id_value=action['id'],
-                        data={'status': 'in_progress'})
+        db.update_by_id(table=TableNames.ACTION,
+                        id_value=action[ColumnNames.ID],
+                        data={ColumnNames.STATUS: ActionStatus.IN_PROGRESS})
 
         addition = str2dict(action['additions'])
-        if action['command'] == 'capture_and_stitch' and 'mac_address' in addition:
-            mac_address = addition['mac_address']
-            cam_info = db.select_all(table='xcam_cameras',
-                                     conditions=f"mac_address = '{mac_address}'",
-                                     limit=1)
-            if cam_info:
-                cam_info = cam_info[0]
 
-            if cam_info:
-                ip_address = cam_info['ip_address']
-                logger.info(f"do command {action['command']}, with cam IP {ip_address} here")
+        do_action(action, addition)
 
-                db.update_by_id(table="xcam_actions",
-                                id_value=action['id'],
-                                data={'status': 'done'})
         time.sleep(3)
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received")

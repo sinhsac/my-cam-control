@@ -5,6 +5,25 @@ import logging
 
 from SysConfig import SysConfig
 
+class TableNames:
+    ACTION = "xcam_actions"
+    CAMERA = "xcam_cameras"
+
+class ColumnNames:
+    ID = 'id'
+    COMMAND = 'command'
+    MAC_ADDRESS = 'mac_address'
+    IP_ADDRESS = 'ip_address'
+    IP_TYPE = 'ip_type'
+    UPDATED_AT = 'updated_at'
+    CREATED_AT = 'created_at'
+    STATUS = 'status'
+
+class ActionStatus:
+    PENDING = 'pending'
+    IN_PROGRESS = 'in_progress'
+    DONE = 'done'
+    FAILED = 'failed'
 
 class DbHelper:
     """
