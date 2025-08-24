@@ -18,6 +18,7 @@ class ColumnNames:
     UPDATED_AT = 'updated_at'
     CREATED_AT = 'created_at'
     STATUS = 'status'
+    ADDITIONS = 'additions'
 
 class ActionStatus:
     PENDING = 'pending'

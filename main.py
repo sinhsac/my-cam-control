@@ -51,7 +51,7 @@ def do_worker():
                         id_value=action[ColumnNames.ID],
                         data={ColumnNames.STATUS: ActionStatus.IN_PROGRESS})
 
-        addition = str2dict(action['additions'])
+        addition = str2dict(action[ColumnNames.ADDITIONS])
 
         do_action(action, addition)
 
