@@ -9,7 +9,7 @@ class TableNames:
     ACTION = "xcam_actions"
     CAMERA = "xcam_cameras"
 
-class ColumnNames:
+class ColNames:
     ID = 'id'
     COMMAND = 'command'
     MAC_ADDRESS = 'mac_address'
