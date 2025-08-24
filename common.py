@@ -32,7 +32,6 @@ CONTROL_FILE = os.path.join(CONFIG_FOLDER, "control.json")
 CAM_INFO_FILE = os.path.join(CONFIG_FOLDER, "cam_info.json")
 CONFIG_FILE = os.path.join(CONFIG_FOLDER, "config.json")
 SYS_CONFIG_FILE = os.path.join(CONFIG_FOLDER, "sys_config.json")
-DB_FILE = os.path.join(CONFIG_FOLDER, "my_cam.db")
 MAX_RETRIES = 3
 
 
